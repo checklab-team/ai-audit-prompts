@@ -13,6 +13,7 @@
 
 ### Changed
 
+- Claude Fable 系プロンプトの実行モデル指定を `claude-fable-5` から `claude-sonnet-5` へ変更し、README 日英・起動ルール・命名ガイドの案内を更新
 - 監査 report の既定保存先を対象 repo の `docs/ai-audit-prompts/` に変更。`docs/obsidian/` はユーザーが明示指定した場合だけ使い、未存在の既定フォルダを初回作成するときは `.gitignore` に追加するか追跡対象にするかを確認するよう、起動 skill・正本・全監査 prompt を整合させた
 
 ## [0.8.0] - 2026-08-08

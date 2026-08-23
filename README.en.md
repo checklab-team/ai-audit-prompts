@@ -8,6 +8,15 @@
 
 A collection of paste-ready prompts for getting AI agents (Claude Code / Codex CLI, etc.) to perform security, vulnerability, bug, and maintainability audits. By default they do not modify your source: they produce a report plus an applicable fix proposal (diff / before-after code) for each finding. Only when you explicitly set the scope do they apply fixes, within the bounds of not breaking existing behavior. Only project-agnostic, reusable templates live here.
 
+## The one thing you need to do
+
+In the project you want to audit, send your AI agent the following:
+
+```text
+Read <path-to-this-repository>/docs/README_activation.md,
+automatically select the prompt appropriate for the audit target, and run it.
+```
+
 ## What this is
 
 - A set of prompts in `docs/`, picked by tool (Claude / Codex) and DB category (with DB / without DB), for running heavy code audits.
@@ -58,7 +67,7 @@ Exclude: src/api/tests/
 For Claude Fable (deep single-agent reasoning):
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 **Quick version (full defaults):**
@@ -120,7 +129,7 @@ Target host: user@example.com
 Claude Fable:
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 ```
