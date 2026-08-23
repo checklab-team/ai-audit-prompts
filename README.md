@@ -69,7 +69,7 @@ DB区分: あり
 Claude Fable 用（深い推論・単一エージェント）:
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 モデルを切り替えてから、次のプロンプトを投げてください。
@@ -135,7 +135,7 @@ Claude Code（ultracode・並列）でサーバー診断:
 Claude Fable でサーバー診断:
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 ```

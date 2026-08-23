@@ -26,7 +26,7 @@ status: "stable"
 |---|---|
 | `codex` | Codex CLI に作業ゴールとして貼る用 |
 | `claude_ultracode` | Claude Code の ultracode（多エージェント並列ワークフロー）で実行する用 |
-| `claude_fable` | Claude Code で Fable 系モデル（例: `/model claude-fable-5`。以降のバージョンも対象）を使って実行する用。調査・修正は単一エージェントの深い推論、敵対的検証・rubric 採点は独立コンテキストの verifier サブエージェントへ委託する |
+| `claude_fable` | Claude Code で Sonnet 系モデル（例: `/model claude-sonnet-5`。以降のバージョンも対象）を使って実行する用。調査・修正は単一エージェントの深い推論、敵対的検証・rubric 採点は独立コンテキストの verifier サブエージェントへ委託する |
 
 新しいツールを足す場合もこの位置にツール識別子を置く（例: `gemini_audit_db_app.md`）。
 

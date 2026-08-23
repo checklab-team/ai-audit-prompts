@@ -144,7 +144,7 @@ codex / Claude Fable 版は未作成。指定された場合はその旨を伝�
 
 - Codex が作業する場合は `codex_*.md`
 - Claude Code / ultracode が作業する場合は `claude_ultracode_*.md`
-- Claude Fable 系モデルが作業する場合（`/model claude-fable-5` 等の指定・モデルが Fable 系）は `claude_fable_*.md`
+- Claude Sonnet 系モデルが作業する場合（`/model claude-sonnet-5` 等の指定・モデルが Sonnet 系）は `claude_fable_*.md`
 - ユーザーが明示したツール名があればそれを優先する
 
 ## 引数の扱い（Fable / ultracode / Codex 共通）

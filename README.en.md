@@ -58,7 +58,7 @@ Exclude: src/api/tests/
 For Claude Fable (deep single-agent reasoning):
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 **Quick version (full defaults):**
@@ -120,7 +120,7 @@ Target host: user@example.com
 Claude Fable:
 
 ```
-/model claude-fable-5
+/model claude-sonnet-5
 ```
 
 ```
