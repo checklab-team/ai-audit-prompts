@@ -72,3 +72,6 @@ archive/
 # === obsidian-link: managed ===
 /docs/obsidian/
 # === /obsidian-link: managed ===
+
+# Local video production files
+/brag-output/
