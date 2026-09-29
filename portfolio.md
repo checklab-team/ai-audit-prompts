@@ -1,11 +1,11 @@
 ---
 cover:
-  path: portfolio/overview-2026-09-28.jpg
+  path: portfolio/promo-cover-v1.0.0.jpg
   alt: {ja: "ai-audit-prompts の紹介動画", en: "ai-audit-prompts overview video"}
 video:
   provider: youtube
-  id: "AE_XdmDCi7M"
-  durationSeconds: 20
+  id: "doIv1ItRb_w"
+  durationSeconds: 23
 schemaVersion: 1
 color: "#8b6fd6"
 initials: "ap"
