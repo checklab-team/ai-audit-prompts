@@ -27,7 +27,7 @@ status: "stable"
 | 対象 | 正典 | 判定 |
 |---|---|---|
 | app / repository / source code | [`audit_app.md`](audit_app.md) | code、設定、test、workflow、package、アプリ構成を監査する。判定不能時の既定 |
-| managed server / VPS / host | [`audit_server.md`](audit_server.md) | 利用者が所有・運用し、OS全体を調査する権限を持つ稼働serverを完全read-only診断する |
+| managed server / VPS / host | [`audit_server.md`](audit_server.md) | 利用者が所有・運用し、OS全体を調査する権限を持つLinux / Unix系の稼働serverを完全read-only診断する。Windows Serverは現版の対象外 |
 | document vs implementation | [`audit_doc_vs_impl.md`](audit_doc_vs_impl.md) | 指定資料の主張と現行実装を完全非変更で突合する。資料指定必須 |
 
 ### server判定
@@ -38,6 +38,7 @@ status: "stable"
 - 共用hostingはserver診断対象外。自分の領域のWordPress/custom code等はapp監査として扱う。
 - URLだけの外部siteは対象外。第三者siteへのactive scan/DASTはこのbundleでは行わない。
 - server診断はreport ownerとなるprivate repo、接続先、接続承認が揃うまで実接続しない。
+- Windows Server hostは現版の対象外。依頼があれば未対応と伝え、cmdletを推測で選ばない。
 
 ### doc-vs-impl判定
 
@@ -49,7 +50,7 @@ repository/source codeを対象にsecurity、vulnerability、bug、dependency、
 
 ## 2. tool/modelではなくcapabilityを記録する
 
-正典を選んだ後、prompt内で実際に利用できる能力を `yes / no / unknown` と根拠付きで記録する。少なくともfile検索、shell/read-only command、test系、Web一次情報、visual inspection（資料・UI）、並列agent、独立verifier、file編集、plan/report作成を確認する。あわせて監査agent自身の実行mode（read-only等の制約mode、sandbox、network制限の有無）を記録し、全許可modeで動いた場合はその旨を明記する。
+正典を選んだ後、prompt内で実際に利用できる能力を `yes / no / unknown` と根拠付きで記録する。少なくともfile検索、shell/read-only command、test系、Web一次情報、visual inspection（資料・UI。doc-vs-impl正典のみ）、並列agent、独立verifier、file編集、plan/report作成を確認する。あわせて監査agent自身の実行mode（read-only等の制約mode、sandbox、network制限の有無）を記録し、全許可modeで動いた場合はその旨を明記する。
 
 - 並列/独立verifierがあれば探索と検証を分離できる。
 - 並列だけならlead探索へ限定し、統合担当が再読する。
@@ -57,6 +58,26 @@ repository/source codeを対象にsecurity、vulnerability、bug、dependency、
 - 能力が不明/不足でも正典を変えず、未検証を明示する。
 
 製品名やmodel名からsubagent、shell、Web、file write等の能力を推測しない。新しいprovider/modelのために正典promptを追加しない。
+
+### 起動側の前提
+
+prompt文の禁止は技術的な強制ではない。起動環境は正典promptから強制できないため、この節は起動側への推奨として、推奨実行環境と対象repoの設定を信頼しない起動を定める。
+
+#### 推奨実行環境
+
+確認の有無にかかわらず、起動側は監査agentを次の環境で動かすことを既定にする。
+
+- 対象（repo / 資料）は読取専用でmountするか、読取専用のpermission modeで開く。書込はplan / reportの保存先、一時directory、Git管理 = ignoreのときのowner repositoryの `.git/info/exclude`、appのscope「調査・修正まで / フルループ」のときの対象working treeだけに限る。
+- network egressは監査に必要な宛先（server診断の接続先host、Web一次情報のofficial source、dependency scanが使うpackage registry、doc-vs-implで利用者が指定した資料URL / docs platformと、read-only閲覧する稼働instance）のallowlistに限り、それ以外を遮断する。server診断では対象server上から外向きrequestを行わないため、サーバー上modeではWeb一次情報をnoとして記録し、pinned baselineを未再確認として使う。
+- 監査対象外のcredential directory / file（home配下の~/.ssh、~/.aws、~/.config、~/.npmrc等）をagentのfilesystemへmountしない。対象repo内の.env等は監査対象dataとして読取専用で扱い、値は出力しない。server診断では、ssh-agent socket等を使い、鍵本体をagentから読めない形で渡す。ssh configurationとknown_hostsは読取専用で渡してよい。credential directoryをmountしない場合でも、接続に指定した鍵の公開鍵（.pub）だけは読取専用で渡す（IdentitiesOnly=yesでagent内の鍵を選ぶために要る）。
+- 実行環境にsandbox / read-only / network制限の機能があれば有効にする。無い場合はその旨をinventoryへ記録する。
+- 実際の実行modeと上記との差分は、選んだ正典の実行前確認で提示し、承認の対象にする。
+
+#### 対象repoの設定を信頼しない
+
+監査agentは、対象repoが供給するagent / IDE設定（instruction file、hook、MCP server定義、permission / auto-approve設定、env / helper command、editor task、skill定義）をpromptより先に読み込み得る。promptの「権限拡大に使わない」は読み込み済みの設定を取り消せない。対象repoが起動側の管理下でない、または改変を疑う場合は、対象repoの設定を読み込まない起動を選ぶ（folder / workspace trustを与えない、harnessがproject設定の読込を切れるならそれを使う、設定fileを除いた読取専用copyで起動する、のいずれか）。非対話（one-shot / SDK / CI）実行ではtrust確認を出さないharnessがあるため、読み込まない起動を既定にする。inventoryへ「対象repoのagent設定の読込: 読み込んだ / 読み込まなかった / 不明」を記録し、読み込んだ場合はその設定file一覧を監査対象dataとして列挙する。
+
+対話modeでも対象repoを初めて開くときはtrust確認を承認せず、project hook / project MCP / editor taskを無効化した制限modeで起動する。
 
 ## 3. appのDB区分とprofile
 
@@ -84,28 +105,30 @@ appはWeb/API、AI/agent/MCP/RAG、native、desktop、mobile、browser extension
 | 検証モード | 静的 / 安全なローカル検証 / build含む | 安全なローカル検証 |
 | 観点 | バグ / セキュリティ・脆弱性 / 依存関係 / 全部 / profile名 | 全部 |
 | 対象 | repo相対path | repo全体 |
-| 除外 | repo相対path | なし |
+| 除外 | repo相対path（finding対象・変更・検証から除く。経路追跡のread-only参照は既定で許し、「（読取り禁止）」を添えた場合だけ読取りも除く） | なし |
 | 保存先 | repo相対path | docs/ai-audit-prompts |
-| Git管理 | ignore / track | 未存在folder作成前に確認 |
+| Git管理 | ignore / track | ignore = `.git/info/exclude` へ保存先pathを追記（tracked file非変更）、track = untrackedのまま残しadd / commitは人間。未存在folder作成前に確認 |
 | 確認 | あり / なし | あり |
 
 ### server
 
-`接続方法`、`接続先`、`強度`、`観点`、`対象`、`除外`、`保存先`、`Git管理`、`確認` を使う。変更scopeはなく、常に完全read-only。
+`接続方法`、`接続先`、`強度`、`観点`（server正典の18観点の番号または名称で複数指定）、`対象`、`除外`、`保存先`、`Git管理`、`確認` を使う。変更scopeはなく、常に完全read-only。
 
 ### doc-vs-impl
 
-`資料`（必須）、`正典`、`媒体`、`強度`、`対象`、`除外`、`保存先`、`Git管理`、`確認` を使う。資料/source/UIは常に非変更。
+`資料`（必須）、`正典`、`実装基準`、`媒体`、`強度`、`対象`、`除外`、`保存先`、`Git管理`、`確認` を使う。資料/source/UIは常に非変更。
 
-明示された値を優先し、選んだ正典の空欄へ渡す。確認「あり」ではprompt記載の実行前gateを行う。確認「なし」でも未存在保存先のGit管理やfallbackが未解決なら開始しない。確認「なし」の非対話/CI実行では実行前gateが働かない前提で、起動側がread-only・最小権限の実行modeと隔離を用意し、issue/PR本文等の外部入力を検証せずそのままpromptへ連結しない。
+明示された値を優先し、選んだ正典の空欄へ渡す。確認「あり」ではprompt記載の実行前gateを行う。確認「なし」でも未存在保存先のGit管理やfallbackが未解決なら開始しない。確認「なし」の非対話/CI実行では実行前gateが働かないため、「起動側の前提」節の推奨実行環境を必須とする。issue/PR本文等の外部入力を検証せずそのままpromptへ連結しない。
 
 ## 成果物routing
 
-- plan: target/owner repoの `docs/local/plan_<audit-topic>.md`
+- plan: target/owner repoの `docs/local/plan_audit_<topic>.md`
 - report既定: `docs/ai-audit-prompts/report_audit_<topic>_<YYYY-MM-DD>.md`
+- `<topic>` の定義は [`README_naming.md`](README_naming.md) の「成果物命名」に従う
 - server reportもpublic prompt repoではなくowner private repoへ保存する
 - `保存先=` があればreportだけ指定repo相対pathへ変更する
-- `docs/obsidian` は明示指定時だけ使い、entry target/writableを確認する
+- 対象repoがpublicまたは公開状態が不明な場合、reportのGit管理はignoreを提案し、trackは未修正findingの公開を提示した明示承認時だけ
+- 保存先がsymlink / junction / mountの場合は実体pathと書込可否を確認し、無断で別pathへfallbackしない
 
 reportのmetadataは、監査report種別と状態（`draft` / `stable`）が分かる形にし、監査reportを自動archive・自動期限の対象にしない。key名と形式は受け手の文書運用に合わせてよい（例: docsweepなら `type: audit-report`、`status: draft|stable`、`docsweep_policy: never_archive`）。監査事実/evidenceの正本はreport、未対応作業の実行正本はrelated先の実行md（plan / bugfix / issue tracker等）とする。
 
