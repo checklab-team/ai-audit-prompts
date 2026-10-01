@@ -15,13 +15,14 @@ okf_version: "0.2"
 - [app監査の共通契約](README_invariants.md): scope、approval、profile、evidence、検証、summaryの正本。
 - [server診断の共通契約](README_invariants_server.md): 完全read-only、接続先照合、診断、evidence、summaryの正本。
 - doc-vs-implの非変更契約は、正典prompt内に自己完結している。
+- 監査を受け取った側のtriage / 修正フェーズ契約は、[`audit_app.md`](audit_app.md) 末尾の2節に3 family共通で置く。
 
 ## 推奨する正典prompt
 
 自動選択と新規利用の対象は次の3本だけです。実行tool/provider/modelではなく監査対象から選びます。
 
 - [アプリ／source code監査](audit_app.md): DB区分とWeb/API、AI/agent、platform、CI/CD、supply chain、cloud/IaC等のprofileを実装証拠から選ぶ。
-- [管理下server診断（完全read-only）](audit_server.md): 所有・管理下serverの実効状態を変更せず調べ、対策を提言する。
+- [管理下server診断（完全read-only）](audit_server.md): 所有・管理下のLinux / Unix系serverの実効状態を変更せず調べ、対策を提言する。Windows Serverは現版の対象外。
 - [資料と実装の差異監査（完全非変更）](audit_doc_vs_impl.md): 必須指定された資料のclaimを、現行実装・設定・UI・正典と突合する。
 
 ## 移行用deprecated alias
