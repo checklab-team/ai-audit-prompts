@@ -11,7 +11,7 @@ AIにapp/source code、管理下server、資料と実装の差異を監査させ
 | 対象 | paste-ready正典 | 安全境界 |
 |---|---|---|
 | app / repository / source | `docs/audit_app.md` | 既定は調査のみ。明示scopeとapproval時だけ最小修正 |
-| managed server / VPS / host | `docs/audit_server.md` | 完全read-only。対策適用は人間 |
+| managed server / VPS / host（Linux / Unix系） | `docs/audit_server.md` | 完全read-only。対策適用は人間 |
 | document vs implementation | `docs/audit_doc_vs_impl.md` | 資料・実装・UIを完全非変更。修正は提言だけ |
 
 選択順は `target → DB/profile → capability`。DB区分はapp正典の引数であり、tool/provider/model名は正典選択軸ではない。旧tool別14ファイルは一時的なdeprecated aliasであり、監査本文を持たず、新規workでは選ばない。
@@ -27,6 +27,7 @@ promptを編集するときは、先に該当する正本とroutingを読む。
 | 対象選択、引数、capability routing | `docs/README_activation.md` |
 | filename、metadata、alias | `docs/README_naming.md` |
 | doc-vs-implの非変更契約 | `docs/audit_doc_vs_impl.md` 内で自己完結 |
+| 監査後のtriage / 修正フェーズ（3 family共通・監査を受け取った側） | `docs/audit_app.md` 末尾の2節（paste-ready本文の外） |
 
 共通契約を変えるときは、正本 → canonical prompt → activation/index/README/CHANGELOGの順に同期する。aliasへ監査品質規約を複製しない。
 
@@ -89,6 +90,7 @@ CHANGELOG.md / LICENSE
 - prompt変更後は最低限、`git diff --check`、fresh public bundleへの `docsweep okf-check <bundle> --json`、`node scripts/secrets-scan.mjs --all-tracked --block` を確認する。未追跡の新規公開fileを含む作業中はtemporary Git indexで`--staged --block`も使う。
 - alias削除はrepo内外consumerの移行確認をgateにし、このmodernizationとは別planで行う。
 - 未実装の予定をREADME/CHANGELOGへ提供済みとして書かない。過去releaseの記録は改ざんしない。
+- pinned security baselineを更新するときは、app / server両正典のpin一覧の名称・版・URL・確認日を同じ変更で揃え、CHANGELOGへ確認日を記録する。draft / RCはdraftのまま残し、official sourceで確認できていない版へ進めない。
 
 ## AI作業共通ルール
 

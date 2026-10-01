@@ -36,6 +36,8 @@ audit:
   canonical: true
 ```
 
+frontmatterは貼り付け対象外のため、promptの版は本文側に置く。正典3本のpaste-ready本文（`text` code fence内）の先頭行に `prompt版: YYYY-MM-DD` を置く。本文を変更した変更でこの日付とCHANGELOGのentryを同時に更新する。
+
 値域:
 
 | metadata | 許可値 | 規約 |
@@ -99,13 +101,15 @@ alias削除前に、repo外skill等のactive consumerが新3本へ移行済み�
 
 ## 成果物命名
 
-- plan: `<target-repo>/docs/local/plan_<audit-topic>.md`
+- plan: `<target-repo>/docs/local/plan_audit_<topic>.md`
 - report既定: `<target-repo>/docs/ai-audit-prompts/report_audit_<topic>_<YYYY-MM-DD>.md`
+- `<topic>` = `<target>_<slug>`（target = app / server / doc_vs_impl。slugは短いkebab-caseで、app: 対象path・profileまたはrepo名（例: src-api、whole-repo）、server: 接続先を識別する別名（owner側で決める。hostname・IPそのものは避ける）、doc_vs_impl: 資料file名（例: user-manual））。同日同targetで複数実行する場合はslugで区別する
+- 既存fileがある場合は上書きせず `_2`、`_3` の連番を付け、前回reportをrelatedへ載せる
 - server reportもowner private repoへ保存し、owner未確定のまま接続しない
 - userが `保存先=<repo-relative path>` を明示した場合だけreport先を変更する
 
-report frontmatterは `type: audit-report`、`status: draft|stable`、`docsweep_policy: never_archive` を使い、`docsweep_state` / `due` は使わない。
+reportのmetadataは、監査report種別と状態（`draft` / `stable`）が分かる形にし、監査reportを自動archive・自動期限の対象にしない。**この規則が要求するのは意味であって特定toolのkey名ではない。** key名と形式は受け手の文書運用に合わせてよい（例: docsweepを使う場合は `type: audit-report`、`status: draft|stable`、`docsweep_policy: never_archive` を付け、`docsweep_state` / `due` は付けない）。
 
 ## 命名変更手順
 
-新しい監査対象が必要になった場合だけ、この文書でtargetとfamilyの値域を先に追加する。新しいtool/provider/modelのために正典promptを増やさない。公開Markdownを増減・分類変更した場合は、`docs/index.md`、activation、README日英、CLAUDE、CHANGELOG、OKF検査を同じ変更で同期する。
+新しい監査対象が必要になった場合だけ、この文書でtargetとfamilyの値域を先に追加する。新しいtool/provider/modelのために正典promptを増やさない。公開Markdownを増減・分類変更した場合は、`docs/index.md`、activation、README日英、CLAUDE、CHANGELOG、OKF検査を同じ変更で同期する。正典の本文を変更した場合は、本文先頭の `prompt版` とCHANGELOGのentryを同じ変更で更新する。
