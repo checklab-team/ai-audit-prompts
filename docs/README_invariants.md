@@ -154,7 +154,7 @@ DB区分にかかわらず、本番DB接続、schema変更、新規migration、m
 - 既存の公開interface、API、設定形式、保存形式、主要UI、data互換を維持する。
 - 修正前に既存helper、middleware、validator、auth、logger、repository等を読み、最小変更を優先する。
 
-fixture/実機依存、cross-package配管、platform依存、仕様trade-off、繊細な状態機械は、確定しても決定的な再現・検証なしに適用せず、修正案に留める。
+fixture/実機依存、cross-package配管、platform依存、仕様trade-off、繊細な状態機械は、確定しても決定的な再現・検証なしに適用せず、修正案に留める。受け付ける入力の範囲を変える修正（exploit入力の拒否だけを除く）も仕様変更として扱い、修正案に留める。
 
 ## 検証モード
 
@@ -168,9 +168,11 @@ command名ではなくscript本体、出力先、外部送信、課金、共有r
 
 どのモードでもinstall、publish、deploy、release、production/shared resource変更、本番DB、migration実適用、container/service状態変更、commit/pushは禁止する。安全性を確認できないcommandは実行せず、理由と代替証拠を記録する。
 
-`調査まで` ではsourceを変更しない。検証モードの範囲の検証commandと、外部送信の無いread-only command / 静的scannerは実行してよい。検証commandを一切実行しないのは `静的` だけ。registry / advisory APIへrepo由来dataを送るscanは外部送信（定義は「安全境界」）に当たるため、明示許可時だけ実行する。`調査・修正まで` は確定findingの最小修正と許可範囲の検証まで、`フルループ` はその後の再調査まで行う。`調査・修正まで` / `フルループ` では、最初のcode変更より前にreportのfinding一覧へ確定finding全件が対応状況 `plan` で載っていることを確認する。
+`調査まで` ではsourceを変更しない。検証モードの範囲の検証commandと、外部送信の無いread-only command / 静的scannerは実行してよい。検証commandを一切実行しないのは `静的` だけ。registry / advisory APIへrepo由来dataを送るscanは外部送信（定義は「安全境界」）に当たるため、明示許可時だけ実行する。`調査・修正まで` は確定findingの最小修正と許可範囲の検証まで、`フルループ` はその後の再調査まで行う。`調査・修正まで` / `フルループ` では、最初のcode変更より前にreportのfinding一覧へ確定finding全件が対応状況 `plan` で載っていることを確認する。修正箇所を通る既存testが無い場合はその旨を記録し、挙動を維持したという主張の根拠をcode reviewに限る。
 
 ## candidate batchとevidence contract
+
+対象がrepo全体または複数directoryのときは、探索の前にtracked fileのtop-level directoryごとに走査 / 除外（理由: vendored / generated / docs / test専用等）を台帳へ記録し、どちらにも入らないdirectoryを残したまま探索を始めない。除外したdirectoryは未調査として数える。探索は危険な操作（query組立、command / code実行、file path、HTML / URL出力、redirect、deserialization、秘密の比較・暗号操作、unsafe / FFI、権限判定）を先に列挙し、各sinkから攻撃者が制御する入力源まで、別fileを含む全hopを読んで逆にたどる。呼出し元とroute登録は検索で確かめ、存在を仮定しない。
 
 1系列（1つのcore観点または1つのselected profile）につき重大度順の上位5件を1 batchの目安とする。これは探索打切り上限ではない。先行batch後にcritical/high相当lead、未調査の外部入力route、またはbudgetが残る場合は次batchへ進む。終了時は未検証candidate、残lead、未調査routeを列挙する。
 
@@ -186,7 +188,7 @@ command名ではなくscript本体、出力先、外部送信、課金、共有r
 
 重大度は影響、確信度は証拠の強さとして別に付ける。scanner/scoutの報告、userの問題説明、issue、第三者report、合成caseの文章、CVE名、基準への非適合だけで確定しない。対象artifactで7項目を満たすか、fixtureが7項目相当の決定的証拠を明示した場合だけ確定する。document-only評価では条件付き判定とし、実監査済みと装わない。
 
-重大度はimpactだけで付け、exploitability / exposureは別に記録する。critical: credential・全data・RCE・tenant横断・資金等へ到達し得る全面的impact。high: 機密性・完全性・可用性のいずれかへの重大なimpact（範囲が限定されても）。medium: 影響するdata・権限・利用者範囲が限定的。low: 軽微、または別layerの防御で実害が抑えられる。確信度 high: 再現・実行結果または決定的code証明あり。medium: file / lineで経路を追えるが動的確認なし。low: 静的推定・間接証拠のみ。
+重大度はimpactだけで付け、exploitability / exposureは別に記録する。critical: credential・全data・RCE・tenant横断・資金等へ到達し得る全面的impact。high: 機密性・完全性・可用性のいずれかへの重大なimpact（範囲が限定されても）。medium: 影響するdata・権限・利用者範囲が限定的。low: 軽微、または別layerの防御で実害が抑えられる。確信度 high: 再現・実行結果または決定的code証明あり。medium: file / lineで経路を追えるが動的確認なし。low: 静的推定・間接証拠のみ。独立verifierが重大度を付けた場合はそれを上限とし、lead側が引き上げない。verifierが引き下げた場合は理由を台帳へ残す。
 
 ## 既知false-confirm / false-reject guard
 
@@ -196,7 +198,8 @@ command名ではなくscript本体、出力先、外部送信、課金、共有r
 - fixed versionがN/A/未提供のadvisoryへ、存在しないupgrade解決を提案しない。推奨修正が新しいpackage / version / actionを導入する場合はregistry一次情報で存在・版・publisherを確認する。
 - race/TOCTOUはcandidateとして追うが、timing、impact route、防御、決定的証拠が揃うまで確定しない。
 - candidateの大半が未検証なら部分完了/暫定とし、候補検証率へ判断待ちを含めない。
-- 問題箇所がscopeのbuild / deploy成果物に含まれ、entry pointから到達することを確認する。test / fixture / example / docs内snippet / dead code / 無効なfeature flag / generated fileの入力側だけにある問題は却下とし、非到達の根拠（build設定、flag定義、entry pointからの非到達を示すfile / line）を書く。保守上残す価値がある場合はresidual riskとして記録する。到達性はevidence contract 2項目の実行経路として示す。
+- 問題箇所がscopeのbuild / deploy成果物に含まれ、entry pointから到達することを確認する。test / fixture / example / docs内snippet / dead code / 無効なfeature flag / generated fileの入力側だけにある問題は却下とし、非到達の根拠（build設定、flag定義、entry pointからの非到達を示すfile / line）を書く。保守上残す価値がある場合はresidual riskとして記録する。到達性はevidence contract 2項目の実行経路として示す。ただし実在しうるcredential（provider形式に合い、例示用の既知値や明示的なdummyと判別できないもの）がtest / fixture / example / docsへcommitされている場合は到達性に関係なく漏えいとして扱い、rotation要のfindingにする（値は出さない）。追跡されていない導入済みのdependency directory（node_modules、.venv等）は経路の理解のためだけに読み、finding対象にしない。追跡されたvendored copyはdependency観点の対象のまま。
+- 入力を作るのは誰か、そのcodeがその相手を信頼してよいかを、それを決めるfile / line付きで記録する。repo自身のcode・固定設定・build stepだけが作る入力なら却下する。その立場が元々持つ権限以上の利得が無ければ却下する。deploy時の前提条件は却下理由ではなくexploitabilityの障壁として記録し、出荷時の既定設定が経路を閉じる場合だけ、その行を根拠に却下する。
 - 既知CVE / 過去patchのpattern一致は、対象revisionで当該修正が適用済みか（該当commit、依存の版、vendored copyの版）を確認してから確定する。修正済みなら却下し、確認できなければ判断待ちにする。
 - provenance / attestation / trusted publishingの存在はpublish元workflowの証拠であり内容の無害性の証拠ではない。publish workflowへ任意codeが到達する経路が残るなら有効なattestation付きの侵害版は作れるため、attestationの有無を単独でclean / 危険の根拠にしない。
 - CIのscan stepが存在し成功していることは既存防御でもcoverageの証拠でもない。抑止設定と閾値を読んでから防御の有無を判断する。
@@ -221,7 +224,7 @@ Web一次情報を利用できる場合は実行時に公式一次情報だけ�
 - reportのmetadataは、監査report種別、状態（`draft` / `stable`）、`tags`、`owner`、`related`、最終確認日が分かる形にする。**key名と形式は受け手の文書運用に合わせてよく、特定toolを前提にしない。** 監査reportは自動archive・自動期限の対象にしない（例: docsweepを使うなら `type: audit-report`、`status: draft|stable`、`docsweep_policy: never_archive` を付け、`docsweep_state` / `due` は付けない）
 - plan/reportの本文言語は明示指定がなければ依頼文の言語に従う。監査判定・対応状況・検証状態の語（確定 / 却下 / 判断待ち / 重複、plan / fix / pending / 見送り、未実施 / 検証待ち / 確認済み / 失敗）は翻訳せず正典の表記をそのまま使い、code・識別子・原文引用は原文のままとする
 
-reportは監査事実・証拠・評価・実行記録の正本、related先の実行md（plan / bugfix / pending、issue tracker等、受け手の運用に従う）は未対応作業の実行正本とする。相互IDまたはlinkで対応させ、状態を二重管理しない。finding IDにはrun間で安定するfingerprintを添え、再監査では新規 / 継続 / 解消 / 再出現を集計する。report metadata（report冒頭）には使用promptとprompt版を含める。
+reportは監査事実・証拠・評価・実行記録の正本、related先の実行md（plan / bugfix / pending、issue tracker等、受け手の運用に従う）は未対応作業の実行正本とする。相互IDまたはlinkで対応させ、状態を二重管理しない。finding IDにはrun間で安定するfingerprint（観点またはCWE + 正規化path + function + sink行等）と、該当すればCWE（複数可）を添え、再監査では新規 / 継続 / 解消 / 再出現を集計する。report metadata（report冒頭）には使用promptとprompt版を含める。
 
 ## HTML表示と点数評価の共通契約
 
@@ -238,7 +241,7 @@ report冒頭は点数ではなく次を出す。
 - confirmed findingの重大度別件数と対応状況（plan / fix / pending / 見送り）
 - 全candidate総数（判断待ちとunknown profile由来も分母に含む）、検証済み数、候補検証率 `(確定 + 却下) / candidate総数`
 - selected / skipped / unknown profileとprofile別coverage
-- evidenceを得た領域、未調査領域、未調査critical route
+- evidenceを得た領域、未調査領域（top-level directory台帳の除外と理由を含む）、未調査critical route
 - 独立検証の段階（あり / 一部 / なし）と方法、lead / verifierのexact model ID
 - 探索run数と、複数runで一致したcandidateの割合
 - residual risk、判断待ち、結果状態 `確定 / 暫定 / 算定不能`

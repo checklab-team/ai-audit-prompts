@@ -16,7 +16,7 @@ audit:
 実行製品・provider・modelを問わず使える、アプリ／source code監査の正典prompt。DB区分と複数security profileを対象実装から選び、利用可能なcapabilityに応じて並列探索または直列二巡を行う。既定は調査のみで、修正は明示scope内の最小変更に限る。
 
 ```text
-prompt版: 2026-10-09
+prompt版: 2026-10-16
 
 このrepositoryのアプリ／source codeを、次の契約に従って監査してください。
 
@@ -197,7 +197,7 @@ package managerのinstall-time policy既定（Web一次情報が使えない場�
 
 既存の公開interface、API、設定形式、保存形式、主要UI、data互換を維持する。修正前に周辺のhelper、middleware、validator、auth、logger、repository等を読み、既存patternを使う最小変更を優先する。
 
-fixture/実機capture依存、cross-package配管、platform依存、behavior trade-off、繊細な認証/承認/状態機械は、確定しても決定的な再現・検証なしに適用せず、修正案に留める。「確定」と「適用」を混同しない。
+fixture/実機capture依存、cross-package配管、platform依存、behavior trade-off、繊細な認証/承認/状態機械は、確定しても決定的な再現・検証なしに適用せず、修正案に留める。受け付ける入力の範囲を変える修正（exploit入力の拒否だけを除く）も仕様変更として扱い、修正案に留める。「確定」と「適用」を混同しない。
 
 ■ 検証モード
 
@@ -221,7 +221,7 @@ go test / cargo test等を内部compileだけで一律禁止しない。一方�
 
 scanner、検索、探索担当の報告だけで確定しない。userの問題説明、issue、第三者report、合成caseの文章も、それ自体は対象artifactの決定的証拠ではなくlead/candidateである。対象code/config/test/一次資料で後述7項目を満たすか、fixtureが7項目相当の決定的証拠を明示した場合だけ確定する。対象artifactへ到達できず資料・説明文だけで評価する場合（document-only評価）は「条件を満たせば確定」と条件付きで示し、実監査済みと装わない。重大度はimpact、確信度はevidenceの強さとして別に付ける。
 
-重大度はimpactだけで付け、exploitability / exposureは別に記録する。critical: credential・全data・RCE・tenant横断・資金等へ到達し得る全面的impact。high: 機密性・完全性・可用性のいずれかへの重大なimpact（範囲が限定されても）。medium: 影響するdata・権限・利用者範囲が限定的。low: 軽微、または別layerの防御で実害が抑えられる。確信度 high: 再現・実行結果または決定的code証明あり。medium: file / lineで経路を追えるが動的確認なし。low: 静的推定・間接証拠のみ。
+重大度はimpactだけで付け、exploitability / exposureは別に記録する。critical: credential・全data・RCE・tenant横断・資金等へ到達し得る全面的impact。high: 機密性・完全性・可用性のいずれかへの重大なimpact（範囲が限定されても）。medium: 影響するdata・権限・利用者範囲が限定的。low: 軽微、または別layerの防御で実害が抑えられる。確信度 high: 再現・実行結果または決定的code証明あり。medium: file / lineで経路を追えるが動的確認なし。low: 静的推定・間接証拠のみ。独立verifierが重大度を付けた場合はそれを上限とし、lead側が引き上げない。verifierが引き下げた場合は理由を台帳へ残す。
 
 確定findingは最低限次の7項目をすべて満たす。欠ければ判断待ちまたは却下にする。却下にも証拠を要求する。既存防御を理由にする却下は、(a) 防御が問題箇所へ到達する全入口に適用されていること（適用箇所のfile / lineと、適用されない入口が無いことを確かめた探索query）、(b) 防御の適用条件がfail-closedであること、(c) 少なくとも1つのbypass仮説（別route、encoding / 正規化差、部分適用、順序 / TOCTOU、allowlist漏れ）を立てて棄却した根拠、の3点を伴う場合だけ認める。防御の存在だけを理由にした却下は判断待ちに留める。安全な再現の失敗command・出力による却下はそのまま認める。複数agentやreviewerの合意は証拠にしない。関数名・変数名・設定名からの推定で挙動を断定せず、file / line引用のない挙動主張はlead止まりにする。検証モードが許す範囲では、安全に検証できるcandidateは静的な合意より実行結果を優先する。
 
@@ -241,7 +241,8 @@ scanner、検索、探索担当の報告だけで確定しない。userの問題
 - advisoryのfixed versionがN/A/未提供なら、存在しないupgrade解決を提案しない。到達可能性、mitigation、代替回避、vendor方針を確認し、不足は判断待ちにする。推奨修正が新しいpackage / version / actionを導入する場合は、registry一次情報で存在・版・publisherを確認したURLを添える。Web一次情報が使えない場合は未確認と明示する。
 - validationとuseの間で状態が変化できる経路はrace/TOCTOU candidateにするが、timing、impact route、防御、決定的証拠を満たすまで確定しない。
 - candidateの大半が未検証なら部分完了/暫定とし、検証済み件数と候補検証率を正確に出す。判断待ちを検証済みへ含めない。
-- 問題箇所がscopeのbuild / deploy成果物に含まれ、entry pointから到達することを確認する。test / fixture / example / docs内snippet / dead code / feature flagで無効な経路 / generated fileの入力側だけにある場合は却下とし、根拠（build設定、flag定義、entry pointからの非到達を示すfile / line）を書く。保守上残す価値がある場合はresidual riskとして記録する。到達性はevidence contract 2項目の実行経路として示す。
+- 問題箇所がscopeのbuild / deploy成果物に含まれ、entry pointから到達することを確認する。test / fixture / example / docs内snippet / dead code / feature flagで無効な経路 / generated fileの入力側だけにある場合は却下とし、根拠（build設定、flag定義、entry pointからの非到達を示すfile / line）を書く。保守上残す価値がある場合はresidual riskとして記録する。到達性はevidence contract 2項目の実行経路として示す。ただし実在しうるcredential（provider形式に合い、例示用の既知値や明示的なdummyと判別できないもの）がtest / fixture / example / docsへcommitされている場合は到達性に関係なく漏えいとして扱い、rotation要のfindingにする（値は出さない）。追跡されていない導入済みのdependency directory（node_modules、.venv等）は経路の理解のためだけに読み、finding対象にしない。追跡されたvendored copyはdependency観点の対象のまま。
+- 入力を作るのは誰か、そのcodeがその相手を信頼してよいかを、それを決めるfile / line付きで記録する。repo自身のcode・固定設定・build stepだけが作る入力なら却下する。その立場が元々持つ権限以上の利得が無ければ却下する。deploy時の前提条件は却下理由ではなくexploitabilityの障壁として記録し、出荷時の既定設定が経路を閉じる場合だけ、その行を根拠に却下する。
 - 既知CVE / 過去patchのpattern一致は、対象revisionで当該修正が適用済みか（該当commit、依存の版、vendored copyの版）を確認してから確定する。修正済みなら却下し、確認できなければ判断待ちにする。
 - registry provenance / SLSA attestation / trusted publishingの存在は「そのCI workflowから公開された」ことの証拠であり、内容が無害である証拠ではない。publish workflowへ任意codeが到達する経路（fork PRのcache復元、pull_request_target、依存lifecycle script、pin未固定のscanner / lint action）が1つでも残るなら、有効なattestation付きでも侵害版は作れる（実例: 2026-05 Mini Shai-Huludは有効なSLSA Build L3 provenance付きで公開された）。attestationの有無を単独でclean / 危険の根拠にしない。
 - CIのscan stepが存在し成功していることは既存防御でもcoverageの証拠でもない。抑止設定と閾値を読んでから防御の有無を判断する。
@@ -256,9 +257,9 @@ scanner、検索、探索担当の報告だけで確定しない。userの問題
    - password verifier（NIST SP 800-63B-4 §3.1.1.2 / §3.2.2に照らす: salt付き（32 bit以上）で適切なpassword hashing scheme（例: Argon2id / scrypt / bcrypt / PBKDF2）とcost設定、単要素なら15文字以上・多要素の1要素なら8文字以上、64文字以上を許容、composition ruleと定期変更を強制しない、漏えい・頻出password blocklist照合、連続失敗のrate limiting / lockout（100回以内で当該authenticatorを無効化）。composition ruleや定期変更が無いこと自体をfindingにしない。SMS / PSTN OTPはrestricted authenticatorとして扱い、phishing-resistant MFAに数えない）
    - login / signup / password reset / MFA / OTP endpointの総当り・credential stuffing耐性（rate limit、lockout、失敗回数の実効値）とaccount enumeration（response本文 / status / timing差）、OAuth authorization requestのstate（PKCE非対応clientが残る場合）とOIDC nonce
    - 第三者integration（connected app / OAuth client / marketplace app）へtokenを発行するprovider側では、scopeの粒度と最小化、admin consent / 承認workflow、refresh tokenの寿命・rotation、integration単位の即時revocation API、integration別のAPI利用audit log（bulk export・異常queryの検知）を、repo内のauthorization server / consent画面 / scope定義 / token store / revocation経路のcode・configで確認できる範囲だけ判定し、観測できない運用側の監視・IP制限はunknown/未調査とする
-2. input/output: SQL/NoSQL/ORM injection（user制御のfilter object / operator / relation pathをORM・query builder・NoSQL queryへ渡す経路と、それによる関連table・列の条件付きleakを含む。parameterizationの有無だけで却下しない）、command/code/template injection（error-basedのblind SSTIを含む）、XSS/CSRF/SSRF、path traversal、XXE、unsafe deserialization、prototype pollution、ReDoS、header/log injection、canonicalization（validation後のUnicode正規化、同一入力を複数parserが異なって解釈するparser differential）、context別encoding、framework内部cache keyへのrequest由来値の混入
+2. input/output: SQL/NoSQL/ORM injection（user制御のfilter object / operator / relation pathをORM・query builder・NoSQL queryへ渡す経路と、それによる関連table・列の条件付きleakを含む。parameterizationの有無だけで却下しない）、command/code/template injection（error-basedのblind SSTIを含む）、XSS（攻撃者が先頭を制御できる値がlocation / href / iframe src / window.open / form actionへhttp(s)・同一site pathに限る検査なしに届くjavascript: URLを含む）/CSRF/SSRF、path traversal、XXE、unsafe deserialization、prototype pollution、ReDoS、header/log injection、canonicalization（validation後のUnicode正規化、同一入力を複数parserが異なって解釈するparser differential）、context別encoding、framework内部cache keyへのrequest由来値の混入
 3. data/privacy: classification、最小収集、retention/deletion/export、cache/backup/log/telemetry、cross-tenant、local/browser storage、transport/at-rest、secret境界。build時にclient bundle / app packageへ焼かれる公開向け変数を列挙して公開可能な識別子と権限を持つcredentialを分け、公開前提keyのprovider側restriction（referrer / bundle ID / API scope）はrepo内のconfig/IaCで確認できる範囲だけ判定し、観測できなければunknown/未調査とする。第三者から預かったOAuth token / API key（顧客のconnected service credential）はcredential storeとしてinventoryし、暗号化（KMS / envelope）、scope最小化、rotation、上流vendor侵害通知時の一括revocation手順の有無を確認する。support case・ticket・log・free text fieldへ平文credentialが蓄積する経路はsecret sinkとして数える
-4. cryptography: approved primitiveだけでなく、key generation/storage/scope/rotation/revocation、secure randomness、nonce/IV reuse、downgrade/algorithm confusion、signature/MAC verification、TLS hostname/chain validation、secret manager境界、暗号inventory（algorithm、鍵長、library、設定箇所）とalgorithm差し替え容易性（crypto agility）、TLS supported groupsをhybrid PQC key share（RFC 10024のX25519MLKEM768等。純ML-KEM groupのみの有効化はhybrid対応と見なさない）を除外する形へ固定していないか。PQC未対応だけではfindingを確定せず、要件が無ければresidual riskとして記録する
+4. cryptography: approved primitiveだけでなく、key generation/storage/scope/rotation/revocation、secure randomness、secret / token / MAC / signature / password hashの比較のconstant-time性（timing side channel）、nonce/IV reuse、downgrade/algorithm confusion、signature/MAC verification、TLS hostname/chain validation、secret manager境界、暗号inventory（algorithm、鍵長、library、設定箇所）とalgorithm差し替え容易性（crypto agility）、TLS supported groupsをhybrid PQC key share（RFC 10024のX25519MLKEM768等。純ML-KEM groupのみの有効化はhybrid対応と見なさない）を除外する形へ固定していないか。PQC未対応だけではfindingを確定せず、要件が無ければresidual riskとして記録する
 5. misconfiguration/default/integrity: debug/test endpoint、fail-safe default、security header（HSTSのmax-age / includeSubDomains / preload、frame-ancestorsまたはX-Frame-Options、X-Content-Type-Options、Referrer-Policy、COOP / COEP / CORP、Permissions-Policy、Cache-Controlを値まで読む。X-XSS-Protection / Expect-CT / HPKPは廃止済みとして推奨修正に含めない）、CORS（Origin反射 + credentials、null origin、regex / suffix一致の許可）、CSP、feature flag、config precedence、signed update/data、外部配信assetのintegrity（SRI）、untrusted plugin/config、serialization boundary
    - repo内のAI coding agent / IDE設定（instruction file、hook、MCP server定義、permission / auto-approve設定、folder open時に走るeditor task、editor拡張の推奨（.vscode/extensions.json、*.code-workspaceのextensions.recommendations、devcontainer.jsonのcustomizations.vscode.extensions）、skill定義）の自動実行経路・権限緩和・隠しUnicode / HTMLコメント命令、agent設定内のenv / API base URL / proxy / telemetry endpointの上書き（API keyや会話を第三者endpointへ送る経路）、project scopeのMCP serverを一括で無確認有効化するflag、trust確認より前に効く設定区分（製品と版で異なる）、repoが持ち込むgit hookやfsmonitor等のconfig駆動command（core.hooksPath、.githooks、husky等のhook manager、nested / embedded bare repository内のhook）がagentのgit操作で発火する経路、session中に生成・改変できる設定file（起動時に存在しない設定fileの作成でhook / 権限を永続化する経路）。AI profileの有無にかかわらず調べ、version未固定のnpx / uvx起動、inline script、出所を検証できないremote endpoint、tracked secretやAI session artifactの混入も確認する。推奨extensionは自動実行ではなくfolder open時にinstall promptを出す配布経路として扱い、publisher IDの実在、verified publisher、配布marketplace（VS Code Marketplace / Open VSX等）、直近のpublisher変更・所有者移転を照合する。publisher trust dialogとmarketplace署名検証は出所の整合だけを示し、内容の安全性の根拠にしない
    - これらの設定・workflow・loader fileは設定不備としてだけでなく侵害痕跡（IoC）candidateとしても評価する。追加されたcommit / PR / author / 日時をread-onlyのgit historyで読み、次のsignalが重なる場合は確定時にcritical（provisional）の「侵害疑い」として報告し、推奨対処を設定修正ではなくsecret rotation・runner / 端末隔離・上流（registry・依存先project）への通知にする: bot風または無関係なauthor（例: `some-bot <some-bot@example.com>`）、依存更新commit（`chore: update dependencies` 等）に紛れた追加、名前と内容の不一致（codeql / discussion等の名前で `toJSON(secrets)` や外部送信を行うworkflow）、SessionStart / folderOpen hookが同梱script（`setup.mjs` `setup_bun.js` `bun_environment.js` 等）を実行する構成、package.jsonへのpreinstall追加とloader file同梱。hookの存在やbot authorだけの単一signalでは侵害と断定せず、外部送信・secret列挙等の内容側証拠と組み合わせる（実例: 2025-11 Shai-Hulud 2.0、2026-05 Mini Shai-Hulud、2026-08 ChainDrop）。
@@ -312,7 +313,7 @@ AI / LLM / agent / MCP / RAG:
 - OWASP GenAI LLM Top 10 2026（LLM01 Prompt Injection、LLM02 Sensitive Information Disclosure、LLM03 Excessive Agency、LLM04 Supply Chain、LLM05 Data and Model Poisoning、LLM06 Unbounded Consumption、LLM07 Misinformation、LLM08 Hidden Context Exposure、LLM09 Vector and Embedding Weaknesses、LLM10 Improper Output Handling）とOWASP Top 10 for Agentic Applications 2026（ASI01〜ASI10）を上の各項目へ対応付け、category名の有無ではなく対象実装の入口・防御・失敗経路を追う。LLM07はRAGのcitation integrityと、model出力を検証なしに判断・実行・支払い・infra変更へ使う経路（side-effect preview / approvalの有無）として扱う。
 
 native / memory safety / FFI:
-- unsafe block、FFI ownership/lifetime、buffer/length、integer/pointer、serialization、privilege boundary、sandbox、code signing、update path、crash/cleanupを調べる。FFI境界でsafeと宣言された外部関数（Rust 2024 editionのunsafe extern内safe fn等）は、宣言された安全前提が外部実装側と一致するかを1件ずつ読む。
+- unsafe block、FFI ownership/lifetime、buffer/length、境界外read / write、use-after-free / double free、type confusion、integer/pointer、serialization、privilege boundary、sandbox、code signing、update path、crash/cleanupを調べる。FFI境界でsafeと宣言された外部関数（Rust 2024 editionのunsafe extern内safe fn等）は、宣言された安全前提が外部実装側と一致するかを1件ずつ読む。
 
 desktop / Electron / Tauri / WebView:
 - renderer/main/backend間IPC、sender/origin検証、preload/bridge allowlist、WebView/navigation、custom protocol、filesystem/path/symlink、shell open、local secret、auto-update署名/rollback、custom trust store / certificate pinningの更新経路を調べる。local HTTP server（OAuth loopback callback等）を持つ場合はWeb / API profileのlocal server項目を適用する。
@@ -365,13 +366,13 @@ DBなし:
 
 ■ 実行phase
 
-1. inventory: instructions、repo構成、差分、entry point、trust boundary、DB/profile、baseline、capability、AI executionを記録する。監査対象のcommit SHA（未管理ならUNVERSIONED）とworking treeのdirty有無、SECURITY.md / security.txt / 脆弱性受付窓口（不在はcore観点10のcandidateへ渡す）、文書化されたthreat modelとout-of-scope、repo内のagent / IDE設定とAI session artifact（chat history等）のtracked有無、secretのhistory走査の実施有無と範囲（ref数 / commit数 / shallowか）も記録する。文書化されたthreat modelがある場合、その外側のfindingは外側であることだけを理由に却下せず、scope外であることを監査判定とは別に記録して数える。`.github/workflows/`、agent / IDE設定、package.jsonのlifecycle script、`optionalDependencies` / `bundledDependencies` の直近（目安90日）の変更履歴（author / 日時 / 経路）をgit historyから記録する。monorepo / workspaceでは、deployされるpackage一覧、`対象`外のworkspace依存（workspace: / path依存）、root lockfileとpackage別lockfile・registry設定の併存を記録し、`対象`外だが経路上のpackageは「読取りのみ・finding対象外」としてcoverageへ載せる。
+1. inventory: instructions、repo構成、差分、entry point、trust boundary、DB/profile、baseline、capability、AI executionを記録する。対象がrepo全体または複数directoryのときは、探索の前にtracked fileのtop-level directoryごとに走査 / 除外（理由: vendored / generated / docs / test専用等）を台帳へ記録し、どちらにも入らないdirectoryを残したまま探索を始めない。除外したdirectoryは未調査として数える。監査対象のcommit SHA（未管理ならUNVERSIONED）とworking treeのdirty有無、SECURITY.md / security.txt / 脆弱性受付窓口（不在はcore観点10のcandidateへ渡す）、文書化されたthreat modelとout-of-scope、repo内のagent / IDE設定とAI session artifact（chat history等）のtracked有無、secretのhistory走査の実施有無と範囲（ref数 / commit数 / shallowか）も記録する。文書化されたthreat modelがある場合、その外側のfindingは外側であることだけを理由に却下せず、scope外であることを監査判定とは別に記録して数える。`.github/workflows/`、agent / IDE設定、package.jsonのlifecycle script、`optionalDependencies` / `bundledDependencies` の直近（目安90日）の変更履歴（author / 日時 / 経路）をgit historyから記録する。monorepo / workspaceでは、deployされるpackage一覧、`対象`外のworkspace依存（workspace: / path依存）、root lockfileとpackage別lockfile・registry設定の併存を記録し、`対象`外だが経路上のpackageは「読取りのみ・finding対象外」としてcoverageへ載せる。
 2. threat/risk mapping: 外部入力、identity、privilege、state、secret、network、build/releaseの経路を図または表にし、critical routeを決める。
-3. exploration: core/profileごとにleadを集め、batch単位でcandidateへ昇格する。並列結果も未検証のまま扱う。並列agent capabilityがある場合、critical routeのlead探索は互いの結果を見せない独立context 2本で行い、両方で出たlead / 片方だけのleadを区別して台帳へ記録する。片方だけのleadは「単一run観測」と表示し、再監査の新規 / 解消集計に単独で使わない。並列がなければ探索は1 runとし、その旨を記録する。
+3. exploration: 危険な操作（query組立、command / code実行、file path、HTML / URL出力、redirect、deserialization、秘密の比較・暗号操作、unsafe / FFI、権限判定）を先に列挙し、各sinkから攻撃者が制御する入力源まで、別fileを含む全hopを読んで逆にたどる。呼出し元とroute登録は検索で確かめ、存在を仮定しない。core/profileごとにleadを集め、batch単位でcandidateへ昇格する。並列結果も未検証のまま扱う。並列agent capabilityがある場合、critical routeのlead探索は互いの結果を見せない独立context 2本で行い、両方で出たlead / 片方だけのleadを区別して台帳へ記録する。片方だけのleadは「単一run観測」と表示し、再監査の新規 / 解消集計に単独で使わない。並列がなければ探索は1 runとし、その旨を記録する。
 4. adversarial verification: candidateごとに実code、防御、別route、反証を確認し、確定/却下/判断待ち/重複を付ける。
 5. remediation: scopeが許す時だけ、確定済みで自己完結した最小修正を行う。最初のcode変更より前に、reportのfinding一覧に確定finding全件が対応状況 `plan` で載っていることを確認してから着手する。同一run内ではこのfinding一覧を実行mdの表として使い、run終了時の残件は受け手が実行mdへ引き継ぐ。調査までではdiffまたはbefore/after案だけを示す。
-6. verification: scopeと検証モードが許す安全な検証を行い、command、結果、副作用確認、未実行理由を残す。修正を適用したfindingでは、確定に使った再現test・fixtureと検出に使ったscanner queryを修正後に同条件で再実行し、修正前に失敗し修正後に成功したことを記録する。再実行できない場合は未実行理由を残し、検証状態を確認済みにせず検証待ちとする。
-7. re-audit: フルループだけ、変更routeと周辺profileを再走査する。前回findingにはrun間で安定するfingerprint（観点またはCWE + 正規化path + function + sink行等）を付けて新規 / 継続 / 解消 / 再出現を集計し、再走査で検出されなくなっただけのfindingを再現確認なしに解消としない。2巡目以降の新規はcritical/high相当と新規routeを優先して検証し、未検証分は残lead・未検証candidateとして列挙する。
+6. verification: scopeと検証モードが許す安全な検証を行い、command、結果、副作用確認、未実行理由を残す。修正を適用したfindingでは、確定に使った再現test・fixtureと検出に使ったscanner queryを修正後に同条件で再実行し、修正前に失敗し修正後に成功したことを記録する。再実行できない場合は未実行理由を残し、検証状態を確認済みにせず検証待ちとする。修正箇所を通る既存testが無い場合はその旨を記録し、挙動を維持したという主張の根拠をcode reviewに限る。
+7. re-audit: フルループだけ、変更routeと周辺profileを再走査する。今回のfindingを前回findingとfingerprint（report契約のfinding欄）で照合して新規 / 継続 / 解消 / 再出現を集計し、再走査で検出されなくなっただけのfindingを再現確認なしに解消としない。2巡目以降の新規はcritical/high相当と新規routeを優先して検証し、未検証分は残lead・未検証candidateとして列挙する。
 8. closeout: rubric各項目について、充足状態（充足 / 未充足 / 該当なし）と充足根拠（report内の節名 / 台帳行ID / command出力の所在）へのpointerを1行ずつ表にしてreport末尾へ置く。12と14はgit status --porcelainとgit diff --stat（scope調査まででは差分なしを示す）の出力を貼り、13は台帳のtable行数を再集計した値とsummaryの件数・率を並べて貼る（記憶から書かない）。pointerを書けない項目は未充足として該当phaseへ戻る。独立verifierがあればこの表をverifierに照合させ、なければ二巡目で行ったと明記する。
 
 監査plan mdはfail → investigate → verify → distill → consultのmemoryとして使う。却下を消さず、誤前提を調べ、根拠付き事実へ昇格し、「このrepoでは〜」の確認済みruleへ蒸留し、再調査前に参照する。
@@ -392,7 +393,7 @@ report冒頭に次を置く。固定100点を既定にしない。
 - confirmed finding: critical/high/medium/low別件数とplan/fix/pending/見送り
 - candidate: 全candidate総数（判断待ちとunknown profile由来も分母に含む）、検証済み数、候補検証率 = (確定 + 却下) / candidate総数
 - profile: selected/skipped/unknownとprofile別coverage
-- evidenceを得た領域、未調査領域、未調査critical route
+- evidenceを得た領域、未調査領域（top-level directory台帳の除外と理由を含む）、未調査critical route
 - 独立検証: あり / 一部 / なし（段階は初期準備4の定義）、方法、lead / verifierのexact model ID
 - 探索run数（1 / 2）と、複数runで一致したcandidateの割合
 - regulatory context（未検証・該当時のみ）: userが明示要求した場合、または対象 / 資料が特定の法令・規格への適合を主張する場合だけ、その名称・版/施行日・適用状態（法令は改正法と適用段階。段階適用なら適用済み / 未適用の別）・URL・確認日を記録する。該当性・適合可否・severityは判定せず、規制名の有無だけでfindingを作らず、checklist化しない。適合主張と実装の突合はこのpromptでは行わず、資料突合の正典の対象として報告する。該当しなければこの欄を省く
@@ -405,7 +406,7 @@ report冒頭に次を置く。固定100点を既定にしない。
 
 各findingには次を含める。
 
-- ID、観点/profile、重大度critical/high/medium/low、確信度high/medium/low
+- ID、観点/profile、CWE（該当時、複数可）、run間で安定するfingerprint（観点またはCWE + 正規化path + function + sink行等）、重大度critical/high/medium/low、確信度high/medium/low
 - 監査判定（確定 / 却下 / 判断待ち / 重複）、対応状況（plan=未着手 / fix=適用済み / pending=判断・外部依存待ち / 見送り=修正しないことが確定）、検証状態（未実施 / 検証待ち / 確認済み / 失敗）、対応する実行md側のタスクID
 - 具体的入力/状態/timing、実行経路、既存防御、反証と棄却根拠
 - file/function/lineまたは一次資料、決定的証拠
