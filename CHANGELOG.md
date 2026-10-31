@@ -5,7 +5,31 @@
 
 ## [Unreleased]
 
-[Unreleased]: https://github.com/ishizakahiroshi/ai-audit-prompts/compare/v1.0.0...HEAD
+### Changed
+
+- 2026-10-16: app正典 `docs/audit_app.md` と正本 `docs/README_invariants.md` の探索・検証の手順を補強し、app正典のprompt版を `2026-10-16` へ更新した。repo全体などを対象にするときは、探索の前にtop-level directoryごとの走査 / 除外を台帳へ記録し、除外したdirectoryを未調査として数える。探索は危険な操作（sink）を先に列挙し、攻撃者が制御する入力源まで別fileを含めて逆にたどる。確定・却下は、入力を作る主体をそのcodeが信頼してよいか、その立場が元々持つ権限を超える利得があるかで判定し、deploy時の前提条件は却下理由ではなく障壁として記録する。独立verifierが付けた重大度をlead側が引き上げない。
+- 2026-10-16: test / fixture / example / docsだけにある問題を却下する規則に、実在しうるcredentialのcommitは到達性に関係なく漏えいとして扱う例外を加え、追跡されていない導入済みのdependency directoryをfinding対象外にした。app正典のcore観点にjavascript: URLによるXSSと、秘密・MAC・署名等の比較のconstant-time性を、native profileに境界外read / write、use-after-free / double free、type confusionを明示した。
+- 2026-10-16: findingの欄へCWE（該当時）とrun間で安定するfingerprintを加え、正本が全findingに求めていたfingerprintをapp正典では再監査phaseでしか付けていなかった食い違いを解消した。受け付ける入力の範囲を変える修正は仕様変更として修正案に留め、修正箇所を通る既存testが無い場合はその旨を記録するようにした。完了rubricは14項目のままで、server正典と資料突合正典は変更していない。
+
+## [1.1.0] - 2026-10-09
+
+### Added
+
+- 2026-10-09: 正典3本へ `HTML出力: あり / なし`（省略時あり）と `点数評価: 要求時 / あり / なし`（省略時要求時）を追加し、prompt版を `2026-10-09` へ更新した。Markdownを事実・評価の正本として保持し、HTMLへ同じsnapshotと算出済み点数を表示する。採点なし・未評価・暫定・算定不能、保存不可・同名回避を共通契約で定め、serverの完全read-onlyと資料突合の非変更を維持した。
+- 共通契約 `docs/README_html-report.md`、オフラインで読める `templates/audit-report.html`、全て合成の `examples/audit-report.example.html` を追加した。候補判定の円グラフ、重大度／impact別内訳、評価バー、判断カード・図・証拠を表示し、個別選択を保つ推奨一括、run／ファイル別の下書き保存、コピー・Markdown保存・印刷・回答消去を備える。選択は承認・修正・送信を実行しない。新しいアプリ・生成CLI・build・必須の個人用skillは追加していない。
+
+- 既存のv1.0.0紹介動画（23秒）への日英READMEリンクと、作品紹介のカバー画像・動画情報を掲載した。動画はv1.0.0の紹介として保持する。
+
+### Changed
+
+- pre-commitにdoxguard prereleaseのopt-in検査を追加した。ローカル設定で有効な場合だけ実行し、候補binaryまたはconfigが無い場合はcommitを止める。既存secrets-scanも継続する。
+
+### Fixed
+
+- secrets-scanのGitファイル一覧をNUL区切りで取得し、日本語・空白・引用符を含むファイル名も検査できるようにした。
+
+[Unreleased]: https://github.com/ishizakahiroshi/ai-audit-prompts/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/ishizakahiroshi/ai-audit-prompts/compare/v1.0.0...v1.1.0
 
 ## [1.0.0] - 2026-09-30
 

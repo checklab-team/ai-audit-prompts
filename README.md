@@ -13,11 +13,13 @@
 監査対象に合う正典プロンプトを自動選択して実行して。
 ```
 
+版ごとの変更点は [CHANGELOG](CHANGELOG.md)、タグ付きの公開版は [GitHub Releases](https://github.com/ishizakahiroshi/ai-audit-prompts/releases) を参照してください。
+
 実行製品やモデル名に依存せず、AI にアプリ、管理下サーバー、資料と実装の差異を監査させるための貼り付け用プロンプト集です。監査対象から3本の正典を選び、DB区分、security profile、実行環境のcapabilityを順に解決します。
 
 <p align="center">
   <a href="https://youtu.be/doIv1ItRb_w"><img src="portfolio/promo-cover-v1.0.0.jpg" alt="紹介動画（23秒）: AI 監査プロンプト集 v1.0.0" width="560"></a><br>
-  ▶ <a href="https://youtu.be/doIv1ItRb_w">紹介動画（23秒・YouTube）</a>
+  ▶ <a href="https://youtu.be/doIv1ItRb_w">v1.0.0の紹介動画（23秒・YouTube）</a>
 </p>
 
 ## なぜ作ったか
@@ -136,8 +138,11 @@ security baselineは実行時にofficial sourceだけで（取得先はofficial 
 
 ### 成果物
 
+HTMLは既定で出力します（`HTML出力: あり`。`なし`ならMarkdownのみ）。`点数評価: 要求時 / あり / なし` は省略時「要求時」、あり自体も採点依頼、なしは採点依頼より優先します。HTMLと採点は独立です。監査事実の正本はMarkdownで、HTMLは同じsnapshot・算出済み評価・未確認・対応の選択肢を表示します。選択はブラウザ内の下書きで、承認・修正を実行しません。[共通契約](docs/README_html-report.md)、[雛形](templates/audit-report.html)、[全て合成のデモ](examples/audit-report.example.html)を参照してください。build・外部依存・個人用skillは不要です。
+
 - plan: 対象repoの `docs/local/plan_audit_<topic>.md`
 - report既定: `docs/ai-audit-prompts/report_audit_<topic>_<YYYY-MM-DD>.md`
+- HTML既定: 同じ保存先・basenameの `.html`。最終／途中終了時に生成し、一方でも既存fileがあれば両方に同じ連番を付けます。生成・保存できなければ理由とMarkdownを残し、許可外へfallbackしません。
 - `<topic>` は `<target>_<slug>` です（定義は `docs/README_naming.md` の「成果物命名」）。
 - `保存先=...` を明示した場合だけ別のrepo相対pathを使います。
 - 対象repoがpublicまたは公開状態が不明な場合、reportのGit管理はignoreを提案し、trackは未修正findingの公開を提示した明示承認時だけにします。
@@ -146,7 +151,7 @@ security baselineは実行時にofficial sourceだけで（取得先はofficial 
 
 ## ディレクトリ構成
 
-`docs/` 直下の公開Markdownは22本です。内訳はpaste-ready正典3本、移行用alias 14本、routing/invariants/index 5本です。
+`docs/` 直下の公開Markdownは23本です。内訳はpaste-ready正典3本、移行用alias 14本、routing/invariants/index 5本、HTML契約1本です。
 
 ```text
 docs/
@@ -155,11 +160,14 @@ docs/
   README_naming.md            正典・aliasの命名とmetadata
   README_invariants.md        app監査の共通契約
   README_invariants_server.md server診断の完全read-only契約
+  README_html-report.md       HTML出力・評価・雛形の共通契約
   audit_app.md                app/source code監査の正典
   audit_server.md             managed server診断の正典
   audit_doc_vs_impl.md        資料と実装の差異監査の正典
   *_audit_*.md                旧14pathのdeprecated alias
   local/                      非公開作業記録（gitignore対象）
+templates/audit-report.html   自己完結の共通雛形
+examples/audit-report.example.html 全て合成のデモ
 ```
 
 旧tool別14pathは1回の移行releaseだけ案内用に残します。aliasはpaste-ready promptではなく、自動選択・推奨一覧・正典数に含めません。repo内外consumerの移行確認後、次の破壊的変更を扱う別planで削除します。
@@ -174,4 +182,4 @@ docs/
 - server構成、IP、hostname、顧客名等の案件固有情報
 - 特定projectの調査memo、log、plan、report
 
-公開Markdownの整合確認には `docsweep okf-check docs --json`、秘密検査には `node scripts/secrets-scan.mjs --all-tracked --block` を使えます。このrepositoryには実行codeやbuild成果物はありません。
+公開Markdownの整合確認には `docsweep okf-check docs --json`、秘密検査には `node scripts/secrets-scan.dual.mjs --native-only --all-tracked`（doxguard）を使えます。このrepositoryには製品アプリ・生成CLI・build成果物はありません。HTML雛形には判断下書き用のインラインJSがあります。

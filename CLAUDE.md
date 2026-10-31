@@ -4,7 +4,7 @@
 
 ## プロジェクト概要
 
-AIにapp/source code、管理下server、資料と実装の差異を監査させる、汎用paste-ready promptだけを収録するpublic repository。製品codeや実行環境は持たず、`docs/` の公開Markdownが成果物である。
+AIにapp/source code、管理下server、資料と実装の差異を監査させる、汎用paste-ready promptだけを収録するpublic repository。製品codeや生成CLIは持たず、`docs/` の公開Markdownと自己完結HTML雛形・合成デモが成果物である。
 
 保守対象の正典は3本だけ:
 
@@ -26,6 +26,7 @@ promptを編集するときは、先に該当する正本とroutingを読む。
 | server診断の完全read-only契約 | `docs/README_invariants_server.md` |
 | 対象選択、引数、capability routing | `docs/README_activation.md` |
 | filename、metadata、alias | `docs/README_naming.md` |
+| HTML出力、評価、保存、判断下書き | `docs/README_html-report.md` |
 | doc-vs-implの非変更契約 | `docs/audit_doc_vs_impl.md` 内で自己完結 |
 | 監査後のtriage / 修正フェーズ（3 family共通・監査を受け取った側） | `docs/audit_app.md` 末尾の2節（paste-ready本文の外） |
 
@@ -54,20 +55,23 @@ docs/
   README_naming.md             filename/metadata規約
   README_invariants.md         app監査の正本
   README_invariants_server.md  server診断の正本
+  README_html-report.md        HTML出力・評価・雛形の共通契約
   audit_app.md                 app監査の正典
   audit_server.md              server診断の正典
   audit_doc_vs_impl.md         資料と実装の差異監査の正典
   *_audit_*.md                 旧14pathのdeprecated alias
   local/                       private作業記録（gitignore対象）
+templates/audit-report.html     共通HTML雛形（CSS/JSインライン）
+examples/audit-report.example.html 全て合成のデモ
 assets/                        README用の既存asset
-scripts/                       secrets-scanとhook installer
+scripts/                       doxguard実行アダプタ(secrets-scan.dual/staged)とhook installer
 .githooks/pre-commit           commit前secrets scan
 .github/workflows/             push/PR secrets scan
 README.md / README.en.md       日本語 / 英語の公開入口
 CHANGELOG.md / LICENSE
 ```
 
-`docs/` 直下の公開Markdownは22本（正典3、alias 14、routing/invariants/index 5）。`docs/local/` とignoredなprivate entryは公開数、OKF公開bundle、indexへ含めない。
+`docs/` 直下の公開Markdownは23本（正典3、alias 14、routing/invariants/index 5、HTML契約1）。`docs/local/` とignoredなprivate entryは公開数、OKF公開bundle、indexへ含めない。
 
 ## このrepositoryに置かないもの
 
@@ -87,7 +91,7 @@ CHANGELOG.md / LICENSE
 - 日本語READMEと英語READMEは、構成、正典数、引数、status語、移行期間を一致させる。
 - `docs/index.md` はOKF reserved rootとしてfrontmatterに `okf_version` 以外を追加しない。
 - `docs/` 配下のplan / bugfix / pending等は `docs/local/` に置く。
-- prompt変更後は最低限、`git diff --check`、fresh public bundleへの `docsweep okf-check <bundle> --json`、`node scripts/secrets-scan.mjs --all-tracked --block` を確認する。未追跡の新規公開fileを含む作業中はtemporary Git indexで`--staged --block`も使う。
+- prompt変更後は最低限、`git diff --check`、fresh public bundleへの `docsweep okf-check <bundle> --json`、`node scripts/secrets-scan.dual.mjs --native-only --all-tracked`（doxguard。CIはgitleaksも併用）を確認する。未追跡の新規公開fileを含む作業中はtemporary Git indexで`--staged`も使う。
 - alias削除はrepo内外consumerの移行確認をgateにし、このmodernizationとは別planで行う。
 - 未実装の予定をREADME/CHANGELOGへ提供済みとして書かない。過去releaseの記録は改ざんしない。
 - pinned security baselineを更新するときは、app / server両正典のpin一覧の名称・版・URL・確認日を同じ変更で揃え、CHANGELOGへ確認日を記録する。draft / RCはdraftのまま残し、official sourceで確認できていない版へ進めない。
